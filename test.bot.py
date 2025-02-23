@@ -112,7 +112,7 @@ def check_imports():
         except ImportError as e:
             log_result(f"❌ Errore di importazione nel modulo {module}: {e}")
         except Exception as e:
-            log_result(f"⚠️ Errore sconosciuto durante l'importazione di {module}: {e}")
+            log_result(f"⚠️ Errore sconosciuto durante l'importazione di {module}: {e}", extra={'module': module})
 
 def check_syntax():
     """Verifica la sintassi dei file Python nel progetto."""
