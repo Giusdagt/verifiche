@@ -4,16 +4,16 @@ import re
 import importlib.util
 import logging
 import subprocess
-import sys
 import uuid
 import pkg_resources  # Per verificare pacchetti installabili
 import chardet
+from logging.handlers import RotatingFileHandler
 
 # 📌 Configurazione logging avanzata
 LOG_FILE = "test_bot_log.txt"
+handler = RotatingFileHandler(LOG_FILE, maxBytes=5000000, backupCount=5)
 logging.basicConfig(
-    filename=LOG_FILE,
-    filemode="w",
+    handlers=[handler],
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
