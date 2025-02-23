@@ -25,8 +25,8 @@ MAX_RETRY = 3  # Numero massimo di tentativi prima di un reset forzato
 # 📌 Configurazione di Telegram per notifiche automatiche
 TELEGRAM_BOT_TOKEN = "your_telegram_bot_token"
 CHAT_IDS = {
-    "danny": "7508111845:AAHqpY_VpkN8rgHDvir6q3qT2Danxvm4MXU",
-    "giuseppe": "7727880063:AAG0PlSbFUZ-ddbErzhHdpcrQmx1XDZzfZQ",
+    "danny": "7508",
+    "giuseppe": "77",
 }
 
 def send_message_telegram(chat_id, message):
