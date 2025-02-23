@@ -8,7 +8,7 @@
         "requests_per_minute": 30,
         "rate_limiting": "L'API gratuita permette fino a 30 richieste al minuto"
       },
-      "api_key": "CG-6VXz4ZHe6ASTaqg9D7wghp8M"
+      "api_key": "CG-6V"
     },
     {
       "name": "CryptoCompare",
