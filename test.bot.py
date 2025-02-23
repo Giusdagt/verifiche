@@ -30,7 +30,6 @@ for module_name, module in sys.modules.items():
         setattr(module, "create_backup", mock_create_backup)
         logging.info(f"🛑 Test Mode: `create_backup()` mockata nel modulo {module_name}")
 
-
 def log_result(message, level="INFO"):
     """Scrive i risultati nei log con un codice di errore univoco."""
     error_id = str(uuid.uuid4())[:8]  # Crea un ID univoco abbreviato per ogni errore
@@ -58,6 +57,12 @@ custom_modules = [
     "indicators", "portfolio_optimization", "risk_management",
     "script", "trading_environment", "DynamicTradingManager", "main"
 ]
+
+def verify_modules():
+    for module in custom_modules:
+        file_path = f"{module}.py"
+        if not os.path.exists(file_path):
+            log_result(f"Modulo mancante: {file_path}", "ERROR")
 
 # 📌 Pacchetti richiesti (da installare automaticamente se mancanti)
 
@@ -264,4 +269,5 @@ def full_test():
     log_result("\n✅ TUTTI I TEST COMPLETATI!")
 
 if __name__ == "__main__":
+    verify_modules()
     full_test()
