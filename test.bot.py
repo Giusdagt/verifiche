@@ -18,7 +18,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-SHOW_ONLY_ERRORS = False  # Se True, mostra solo ERROR e CRITICAL nei log
+SHOW_ONLY_ERRORS = True  # Se True, mostra solo ERROR e CRITICAL nei log
 
 # 📌 Mock dinamico della funzione `create_backup()` per i test
 def mock_create_backup(filename=None):
