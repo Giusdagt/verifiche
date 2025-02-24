@@ -14,6 +14,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 GENERATED_MODULE_PATH = "generated_functions.py"
 MODULES_DIR = "auto_generated_modules"
 
+def load_module(module_name, class_name):
+    try:
+        module = importlib.import_module(module_name)
+        return getattr(module, class_name)
+    except (ImportError, AttributeError) as e:
+        logging.error(f"Errore nel caricamento del modulo {module_name}: {e}")
+        return None
+
 def find_missing_functions():
     """
     Analizza i moduli esistenti e individua le funzioni mancanti.
