@@ -9,6 +9,10 @@ import pkg_resources  # Per verificare pacchetti installabili
 import chardet
 from logging.handlers import RotatingFileHandler
 
+missing_packages = []
+dependency_issues = []
+duplicates = []
+
 # 📌 Configurazione logging avanzata
 LOG_FILE = "test_bot_log.txt"
 handler = RotatingFileHandler(LOG_FILE, maxBytes=5000000, backupCount=5)
@@ -216,9 +220,9 @@ def check_logs():
             if "ERROR" in line or "CRITICAL" in line:
                 log_result(f"❌ {line.strip()}")
                 
-"""Genera un report finale con un riepilogo di tutti i test effettuati."""
 def generate_test_report():
     global missing_packages, dependency_issues, duplicates
+    """Genera un report finale con un riepilogo di tutti i test effettuati."""
     log_result("\n📜 Generazione del report finale...")
 
     test_results = {
