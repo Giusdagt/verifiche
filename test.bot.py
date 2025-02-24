@@ -218,6 +218,7 @@ def check_logs():
 
 def generate_test_report():
     """Genera un report finale con un riepilogo di tutti i test effettuati."""
+    global missing_packages, dependency_issues, duplicates
     log_result("\n📜 Generazione del report finale...")
 
     test_results = {
