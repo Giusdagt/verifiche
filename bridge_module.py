@@ -18,7 +18,7 @@ def find_missing_functions():
     """
     Analizza i moduli esistenti e individua le funzioni mancanti.
     """
-   expected_modules = [
+    expected_modules = [
     "portfolio_optimization",
     "risk_management",
     "trading_env",
