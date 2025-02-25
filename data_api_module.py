@@ -136,34 +136,3 @@ def sync_to_cloud():
 
 if __name__ == "__main__":
     asyncio.run(main_fetch_all_data("eur"))
-def fetch_data_from_exchanges(*args, **kwargs):
-    logging.warning('⚠️ Funzione fetch_data_from_exchanges non implementata!')
-    return None
-
-def fetch_historical_data(*args, **kwargs):
-    logging.warning('⚠️ Funzione fetch_historical_data non implementata!')
-    return None
-
-def fetch_market_data(*args, **kwargs):
-    logging.warning('⚠️ Funzione fetch_market_data non implementata!')
-    return None
-
-def load_market_data_apis(*args, **kwargs):
-    logging.warning('⚠️ Funzione load_market_data_apis non implementata!')
-    return None
-
-def max(*args, **kwargs):
-    logging.warning('⚠️ Funzione max non implementata!')
-    return None
-
-def open(*args, **kwargs):
-    logging.warning('⚠️ Funzione open non implementata!')
-    return None
-
-def main_fetch_all_data(*args, **kwargs):
-    logging.warning('⚠️ Funzione main_fetch_all_data non implementata!')
-    return None
-
-def range(*args, **kwargs):
-    logging.warning('⚠️ Funzione range non implementata!')
-    return None
