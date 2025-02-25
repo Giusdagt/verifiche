@@ -100,25 +100,6 @@ if __name__ == "__main__":
     selected_pairs = manager.select_trading_pairs()
     logging.info(f"📊 Coppie di trading selezionate: {selected_pairs}")
     manager.sync_to_cloud()
-def abs(*args, **kwargs):
-    logging.warning('⚠️ Funzione abs non implementata!')
-    return None
-
-def sorted(*args, **kwargs):
-    logging.warning('⚠️ Funzione sorted non implementata!')
-    return None
-
-def next(*args, **kwargs):
-    logging.warning('⚠️ Funzione next non implementata!')
-    return None
-
-def DynamicTradingManager(*args, **kwargs):
-    logging.warning('⚠️ Funzione DynamicTradingManager non implementata!')
-    return None
-
-def open(*args, **kwargs):
-    logging.warning('⚠️ Funzione open non implementata!')
-    return None
 
 def range(*args, **kwargs):
     logging.warning('⚠️ Funzione range non implementata!')
