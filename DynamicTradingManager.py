@@ -1,4 +1,4 @@
-#DynamicTradingManager.py
+# DynamicTradingManager.py
 import ccxt
 import json
 import numpy as np
@@ -7,11 +7,18 @@ import logging
 import time
 import requests
 import shutil
+from data_api_module import fetch_data_from_exchanges
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Percorsi di Backup su USB o Cloud
-USB_PATHS = ["/mnt/usb_trading_data/", "/media/usb/", "/mnt/external_usb/", "D:/trading_backup/", "E:/trading_backup/"]
+USB_PATHS = [
+    "/mnt/usb_trading_data/",
+    "/media/usb/",
+    "/mnt/external_usb/",
+    "D:/trading_backup/",
+    "E:/trading_backup/"
+]
 BACKUP_PATH = next((path for path in USB_PATHS if os.path.exists(path)), "backup_data/")
 CLOUD_BACKUP = "/mnt/google_drive/trading_backup/"
 
@@ -30,7 +37,7 @@ class DynamicTradingManager:
             try:
                 markets = self.exchange.load_markets()
                 pairs = []
-                
+
                 for symbol, market in markets.items():
                     if "/EUR" in symbol and market['active']:
                         ticker = self.exchange.fetch_ticker(symbol)
@@ -39,7 +46,7 @@ class DynamicTradingManager:
 
                         if volume >= self.min_volume and price_change >= self.volatility_threshold:
                             pairs.append((symbol, volume, price_change))
-                
+
                 sorted_pairs = sorted(pairs, key=lambda x: x[1], reverse=True)[:self.top_n]
                 trading_pairs = [pair[0] for pair in sorted_pairs]
 
@@ -47,7 +54,9 @@ class DynamicTradingManager:
                 return trading_pairs
 
             except Exception as e:
-                logging.error(f"⚠️ Errore nel recupero delle coppie EUR (tentativo {attempt+1}/{retries}): {e}")
+                logging.error(
+                    f"⚠️ Errore nel recupero delle coppie EUR (tentativo {attempt+1}/{retries}): {e}"
+                )
                 time.sleep(delay * (2 ** attempt))  # Backoff esponenziale
 
         logging.error("❌ Impossibile recuperare le coppie di trading dopo più tentativi.")
