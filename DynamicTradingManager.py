@@ -100,7 +100,3 @@ if __name__ == "__main__":
     selected_pairs = manager.select_trading_pairs()
     logging.info(f"📊 Coppie di trading selezionate: {selected_pairs}")
     manager.sync_to_cloud()
-
-def range(*args, **kwargs):
-    logging.warning('⚠️ Funzione range non implementata!')
-    return None
