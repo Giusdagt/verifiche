@@ -79,9 +79,10 @@ async def fetch_and_prepare_historical_data():
         logging.info("📥 Avvio del processo di scaricamento ed elaborazione dei dati storici...")
         ensure_directory_exists(SAVE_DIRECTORY)
 
-        if not os.path.exists(RAW_DATA_FILE):
-            logging.warning("⚠️ File JSON grezzo non trovato. Tentativo di scaricamento dati...")
-            await data_api_module.main_fetch_all_data("eur")
+        dati_grezzi = await data_api_module.main_fetch_all_data("eur")
+        if dati_grezzi:
+            with open(RAW_DATA_FILE, "w") as file:
+                json.dump(dati_grezzi, file)
 
         return process_historical_data()
 
@@ -150,38 +151,21 @@ def normalize_data(df):
     except Exception as e:
         logging.error(f"❌ Errore durante la normalizzazione dei dati: {e}")
         return df
-def save_processed_data(*args, **kwargs):
-    logging.warning('⚠️ Funzione save_processed_data non implementata!')
-    return None
 
-def MinMaxScaler(*args, **kwargs):
-    logging.warning('⚠️ Funzione MinMaxScaler non implementata!')
-    return None
+def save_processed_data(df, filename):
+    df.to_parquet(filename)
 
-def ensure_directory_exists(*args, **kwargs):
-    logging.warning('⚠️ Funzione ensure_directory_exists non implementata!')
-    return None
+def ensure_directory_exists(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
-def float(*args, **kwargs):
-    logging.warning('⚠️ Funzione float non implementata!')
-    return None
+def should_update_data(filename):
+    if not os.path.exists(filename):
+        return True
+    file_age = time.time() - os.path.getmtime(filename)
+    return file_age > MAX_AGE
 
-def should_update_data(*args, **kwargs):
-    logging.warning('⚠️ Funzione should_update_data non implementata!')
-    return None
-
-def load_processed_data(*args, **kwargs):
-    logging.warning('⚠️ Funzione load_processed_data non implementata!')
-    return None
-
-def process_websocket_message(*args, **kwargs):
-    logging.warning('⚠️ Funzione process_websocket_message non implementata!')
-    return None
-
-def open(*args, **kwargs):
-    logging.warning('⚠️ Funzione open non implementata!')
-    return None
-
-def consume_websocket(*args, **kwargs):
-    logging.warning('⚠️ Funzione consume_websocket non implementata!')
-    return None
+def load_processed_data(filename):
+    if os.path.exists(filename):
+        return pd.read_parquet(filename)
+    return pd.DataFrame()
