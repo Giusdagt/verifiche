@@ -42,10 +42,13 @@ class VolatilityPredictor:
 
     def train(self, historical_data):
         """Allena il modello sulla volatilità passata per prevedere quella futura."""
-        features = historical_data[['volume', 'price_change', 'rsi', 'bollinger_width']]
+        features = historical_data[['volume', 'price_change', 'rsi',
+                                    'bollinger_width']]
         target = historical_data['volatility']
 
-        X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(features, target,
+                                                            test_size=0.2,
+                                                            random_state=42)
         self.model.fit(X_train, y_train)
 
     def predict_volatility(self, current_data):
@@ -71,74 +74,52 @@ def create_lstm_model(input_shape):
 def train_lstm_model(X_train, y_train, X_val, y_val):
     """Allena il modello LSTM sui dati di addestramento e validazione."""
     model = create_lstm_model((X_train.shape[1], 1))
-    early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    model.fit(X_train, y_train, batch_size=32, epochs=50, validation_data=(X_val, y_val), callbacks=[early_stop])
+    early_stop = EarlyStopping(monitor='val_loss', patience=5,
+                               restore_best_weights=True)
+    model.fit(X_train, y_train, batch_size=32, epochs=50,
+              validation_data=(X_val, y_val), callbacks=[early_stop])
     model.save(MODEL_FILE)
     logging.info(f"✅ Modello LSTM salvato in {MODEL_FILE}")
     return model
 
 def create_xgboost_model():
     """Crea e restituisce un modello XGBoost."""
-    return xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, learning_rate=0.1)
+    return xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100,
+                            learning_rate=0.1)
 
 def train_xgboost_model(X_train, y_train, X_val, y_val):
     """Allena il modello XGBoost sui dati di addestramento e validazione."""
     model = create_xgboost_model()
-    model.fit(X_train, y_train, eval_set=[(X_val, y_val)], early_stopping_rounds=10, verbose=True)
+    model.fit(X_train, y_train, eval_set=[(X_val, y_val)],
+              early_stopping_rounds=10, verbose=True)
     model.save_model(XGB_MODEL_FILE)
     logging.info(f"✅ Modello XGBoost salvato in {XGB_MODEL_FILE}")
     return model
 
-# ===========================
-# 🔹 Funzione per lo Scalping
-# ===========================
-def run_scalping():
-    """Esegue operazioni di scalping basate su segnali di trading AI."""
-    logging.info("🚀 Avvio scalping...")
-    env = TradingEnv()
-    state = env.reset()
-    done = False
-    indicators = TradingIndicators(state)
+def load_lstm_model():
+    """Carica e restituisce il modello LSTM salvato."""
+    if MODEL_FILE.exists():
+        model = load_model(MODEL_FILE)
+        logging.info(f"✅ Modello LSTM caricato da {MODEL_FILE}")
+        return model
+    logging.error(f"❌ Il file del modello LSTM {MODEL_FILE} non esiste.")
+    return None
 
-    while not done:
-        action = env.action_space.sample()  
-        next_state, reward, done, _ = env.step(action)
-
-        risk = RiskManagement().calculate_risk(state, next_state)
-        if risk < 0.02:  
-            logging.info(f"💰 Scalping: Azione {action}, Profitto {reward}")
-        else:
-            logging.warning("⚠️ Scalping saltato per alto rischio!")
+def load_xgboost_model():
+    """Carica e restituisce il modello XGBoost salvato."""
+    if XGB_MODEL_FILE.exists():
+        model = xgb.XGBRegressor()
+        model.load_model(XGB_MODEL_FILE)
+        logging.info(f"✅ Modello XGBoost caricato da {XGB_MODEL_FILE}")
+        return model
+    logging.error(f"❌ Il file del modello XGBoost {XGB_MODEL_FILE} non esiste.")
+    return None
 
 # ===========================
-# 🔹 Preprocessing Dati
+# 🔹 Esecuzione del Modello AI
 # ===========================
-def preprocess_data(data):
-    """Preprocessa i dati per l'input nel modello."""
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    return scaler.fit_transform(data), scaler
-
-def prepare_lstm_data(data, look_back=60):
-    """Prepara i dati per l'input nel modello LSTM."""
-    X, y = [], []
-    for i in range(look_back, len(data)):
-        X.append(data[i-look_back:i, 0])
-        y.append(data[i, 0])
-    return np.array(X).reshape(-1, look_back, 1), np.array(y)
-
-def prepare_xgboost_data(data, look_back=60):
-    """Prepara i dati per l'input nel modello XGBoost."""
-    X, y = [], []
-    for i in range(look_back, len(data)):
-        X.append(data[i-look_back:i, 0])
-        y.append(data[i, 0])
-    return np.array(X), np.array(y)
-
-# ===========================
-# 🔹 Avvio del bot AI
-# ===========================
-if __name__ == "__main__":
-    logging.info("🚀 Avvio del modello AI per il trading automatico.")
+def example_prediction():
+    """Esegue una previsione di esempio con i modelli AI."""
     data = load_data()
     scaled_data, _ = preprocess_data(data['close'].values.reshape(-1, 1))
 
@@ -156,4 +137,6 @@ if __name__ == "__main__":
         xgb_predictions = xgb_model.predict(X_xgb)
         logging.info(f"📊 Previsione XGBoost: {xgb_predictions[-1]}")
 
-    run_scalping()
+if __name__ == "__main__":
+    logging.info("🚀 Avvio del modello AI per il trading automatico.")
+    example_prediction()
