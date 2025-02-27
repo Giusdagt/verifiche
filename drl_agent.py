@@ -58,6 +58,39 @@ def save_model(model, model_name):
     logging.info(f"✅ Modello salvato in {model_path}.")
     backup_model_to_cloud(model_path)
 
+class DRLAgent:
+    def __init__(self, trading_mode="auto"):
+        """Inizializza l'agente di trading."""
+        self.trading_mode = trading_mode  # "auto", "live", "backtest"
+        self.exchange = None
+
+        # Seleziona automaticamente la modalità migliore
+        if self.trading_mode == "auto":
+            self.trading_mode = self.detect_best_mode()
+
+        if self.trading_mode == "live":
+            from config import load_config
+            config = load_config()
+            self.exchange = ccxt.binance({
+                'apiKey': config["binance"]["api_key"],
+                'secret': config["binance"]["api_secret"]
+            })
+
+    def detect_best_mode(self):
+        """Decide se fare trading live o backtesting automaticamente."""
+        market_data = data_handler.load_normalized_data()
+        if market_data.empty:
+            return "backtest"  # Se non ci sono dati recenti → Backtesting
+        else:
+            return "live"  # Se ci sono opportunità → Trading reale
+
+    def execute_trade(self, pair, amount):
+        """Esegue un'operazione di trading o simula un trade per il backtest."""
+        if self.trading_mode == "live":
+            order = self.exchange.create_market_order(pair, 'buy', amount)
+            return order
+        else:
+            print(f"Simulazione trade: BUY {amount} di {pair}")
 # ===========================
 # 🔹 OTTIMIZZAZIONE AUTOMATICA IPERPARAMETRI
 # ===========================
