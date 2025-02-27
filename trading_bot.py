@@ -118,27 +118,3 @@ if __name__ == "__main__":
     from flask_socketio import SocketIO
     socketio = SocketIO()
     start_trading(socketio)
-
-def PortfolioOptimization(*args, **kwargs):
-    logging.warning('⚠️ Funzione PortfolioOptimization non implementata!')
-    return None
-
-def RiskManagement(*args, **kwargs):
-    logging.warning('⚠️ Funzione RiskManagement non implementata!')
-    return None
-
-def TradingEnv(*args, **kwargs):
-    logging.warning('⚠️ Funzione TradingEnv non implementata!')
-    return None
-
-def DRLAgent(*args, **kwargs):
-    logging.warning('⚠️ Funzione DRLAgent non implementata!')
-    return None
-
-def AIModel(*args, **kwargs):
-    logging.warning('⚠️ Funzione AIModel non implementata!')
-    return None
-
-def SocketIO(*args, **kwargs):
-    logging.warning('⚠️ Funzione SocketIO non implementata!')
-    return None
