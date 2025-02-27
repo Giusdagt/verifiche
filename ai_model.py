@@ -111,10 +111,34 @@ def run_scalping():
             logging.warning("⚠️ Scalping saltato per alto rischio!")
 
 # ===========================
-# 🔹 Esecuzione del Modello AI
+# 🔹 Preprocessing Dati
 # ===========================
-def example_prediction():
-    """Esegue una previsione di esempio con i modelli AI."""
+def preprocess_data(data):
+    """Preprocessa i dati per l'input nel modello."""
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    return scaler.fit_transform(data), scaler
+
+def prepare_lstm_data(data, look_back=60):
+    """Prepara i dati per l'input nel modello LSTM."""
+    X, y = [], []
+    for i in range(look_back, len(data)):
+        X.append(data[i-look_back:i, 0])
+        y.append(data[i, 0])
+    return np.array(X).reshape(-1, look_back, 1), np.array(y)
+
+def prepare_xgboost_data(data, look_back=60):
+    """Prepara i dati per l'input nel modello XGBoost."""
+    X, y = [], []
+    for i in range(look_back, len(data)):
+        X.append(data[i-look_back:i, 0])
+        y.append(data[i, 0])
+    return np.array(X), np.array(y)
+
+# ===========================
+# 🔹 Avvio del bot AI
+# ===========================
+if __name__ == "__main__":
+    logging.info("🚀 Avvio del modello AI per il trading automatico.")
     data = load_data()
     scaled_data, _ = preprocess_data(data['close'].values.reshape(-1, 1))
 
@@ -132,10 +156,4 @@ def example_prediction():
         xgb_predictions = xgb_model.predict(X_xgb)
         logging.info(f"📊 Previsione XGBoost: {xgb_predictions[-1]}")
 
-# ===========================
-# 🔹 Avvio del bot AI
-# ===========================
-if __name__ == "__main__":
-    logging.info("🚀 Avvio del modello AI per il trading automatico.")
-    example_prediction()
     run_scalping()
