@@ -35,62 +35,62 @@ class DynamicTradingManager:
         self.exchange = ccxt.binance()  # Connessione a Binance
 
     def fetch_eur_trading_pairs(self, retries=3, delay=2):
-    """Recupera le coppie di trading in EUR con gestione avanzata della volatilità, spread e indicatori tecnici."""
-    for attempt in range(retries):
-        try:
-            markets = self.exchange.load_markets()
-            pairs = []
+        """Recupera le coppie di trading in EUR con gestione avanzata della volatilità, spread e indicatori tecnici."""
+        for attempt in range(retries):
+            try:
+                markets = self.exchange.load_markets()
+                pairs = []
 
-            for symbol, market in markets.items():
-                if "/EUR" in symbol and market['active']:
-                    ticker = self.exchange.fetch_ticker(symbol)
-                    volume = ticker.get('quoteVolume', 0)
-                    price_change = abs(ticker.get('change', 0) / ticker.get('last', 1))
-                    spread = (ticker['ask'] - ticker['bid']) / ticker['bid']  # Calcola lo spread
+                for symbol, market in markets.items():
+                    if "/EUR" in symbol and market['active']:
+                        ticker = self.exchange.fetch_ticker(symbol)
+                        volume = ticker.get('quoteVolume', 0)
+                        price_change = abs(ticker.get('change', 0) / ticker.get('last', 1))
+                        spread = (ticker['ask'] - ticker['bid']) / ticker['bid']  # Calcola lo spread
 
-                    # Recupera le candele OHLCV per calcolare la volatilità recente (1h e 4h)
-                    ohlcv_1h = self.exchange.fetch_ohlcv(symbol, timeframe="1h")
-                    closes_1h = [candle[4] for candle in ohlcv_1h]
-                    volatility_1h = np.std(closes_1h) / np.mean(closes_1h)
+                        # Recupera le candele OHLCV per calcolare la volatilità recente (1h e 4h)
+                        ohlcv_1h = self.exchange.fetch_ohlcv(symbol, timeframe="1h")
+                        closes_1h = [candle[4] for candle in ohlcv_1h]
+                        volatility_1h = np.std(closes_1h) / np.mean(closes_1h)
 
-                    ohlcv_4h = self.exchange.fetch_ohlcv(symbol, timeframe="4h")
-                    closes_4h = [candle[4] for candle in ohlcv_4h]
-                    volatility_4h = np.std(closes_4h) / np.mean(closes_4h)
+                        ohlcv_4h = self.exchange.fetch_ohlcv(symbol, timeframe="4h")
+                        closes_4h = [candle[4] for candle in ohlcv_4h]
+                        volatility_4h = np.std(closes_4h) / np.mean(closes_4h)
 
-                    # Calcola indicatori tecnici
-                    rsi = indicators.relative_strength_index(closes_1h)
-                    macd, macd_signal = indicators.moving_average_convergence_divergence(closes_1h)
+                        # Calcola indicatori tecnici
+                        rsi = indicators.relative_strength_index(closes_1h)
+                        macd, macd_signal = indicators.moving_average_convergence_divergence(closes_1h)
 
-                    # Filtra coppie con volatilità alta, trend chiaro e spread basso
-                    if (
-                        volume >= self.min_volume and 
-                        (volatility_1h >= self.volatility_threshold or volatility_4h >= self.volatility_threshold) and
-                        spread < 0.002 and  # Evita coppie illiquide
-                        rsi > 50 and macd > macd_signal  # Considera solo coppie in trend positivo
-                    ):
-                        pairs.append((symbol, volume, volatility_1h, volatility_4h, spread))
+                        # Filtra coppie con volatilità alta, trend chiaro e spread basso
+                        if (
+                            volume >= self.min_volume and 
+                            (volatility_1h >= self.volatility_threshold or volatility_4h >= self.volatility_threshold) and
+                            spread < 0.002 and  # Evita coppie illiquide
+                            rsi > 50 and macd > macd_signal  # Considera solo coppie in trend positivo
+                        ):
+                            pairs.append((symbol, volume, volatility_1h, volatility_4h, spread))
 
-            # 🔹 **Selezione dinamica della strategia**
-            if self.trading_strategy == "scalping" or self.trading_strategy == "intraday":
-                sort_by_volatility = True  # Se scalping o intraday, priorità a coppie più volatili
-            else:
-                sort_by_volatility = False  # Se lungo termine, priorità a coppie più stabili
+                # 🔹 **Selezione dinamica della strategia**
+                if self.trading_strategy == "scalping" or self.trading_strategy == "intraday":
+                    sort_by_volatility = True  # Se scalping o intraday, priorità a coppie più volatili
+                else:
+                    sort_by_volatility = False  # Se lungo termine, priorità a coppie più stabili
 
-            # Ordina le coppie in base alla strategia scelta
-            sorted_pairs = sorted(pairs, key=lambda x: (x[2] + x[3]), reverse=sort_by_volatility)
-            trading_pairs = [pair[0] for pair in sorted_pairs]
+                # Ordina le coppie in base alla strategia scelta
+                sorted_pairs = sorted(pairs, key=lambda x: (x[2] + x[3]), reverse=sort_by_volatility)
+                trading_pairs = [pair[0] for pair in sorted_pairs]
 
-            self.backup_trading_pairs(trading_pairs)
-            return trading_pairs
+                self.backup_trading_pairs(trading_pairs)
+                return trading_pairs
 
-        except Exception as e:
-            logging.error(
-                f"⚠️ Errore nel recupero delle coppie EUR (tentativo {attempt+1}/{retries}): {e}"
-            )
-            time.sleep(delay * (2 ** attempt))  # Backoff esponenziale
+            except Exception as e:
+                logging.error(
+                    f"⚠️ Errore nel recupero delle coppie EUR (tentativo {attempt+1}/{retries}): {e}"
+                )
+                time.sleep(delay * (2 ** attempt))  # Backoff esponenziale
 
-    logging.error("❌ Impossibile recuperare le coppie di trading dopo più tentativi.")
-    return self.load_backup_pairs()
+        logging.error("❌ Impossibile recuperare le coppie di trading dopo più tentativi.")
+        return self.load_backup_pairs()
 
     def backup_trading_pairs(self, trading_pairs):
         """Salva le coppie di trading in un file JSON di backup."""
