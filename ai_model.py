@@ -1,4 +1,4 @@
-# ai_model.py - Modello AI per il trading automatico e scalping
+# ai_model.py - Modello AI per il trading automatico con ottimizzazione del portafoglio
 import os
 import pandas as pd
 import numpy as np
@@ -17,12 +17,15 @@ from data_handler import load_data
 from drl_agent import DRLAgent
 from gym_trading_env import TradingEnv
 from risk_management import RiskManagement
+from portfolio_optimization import PortfolioOptimizer # 🔥 NUOVA INTEGRAZIONE
 
 # 📌 Configurazione logging avanzata
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s - %(levelname)s - %(message)s")
 
 # 📌 Percorsi per il salvataggio dei modelli
-MODEL_DIR = Path("/mnt/usb_trading_data/models") if Path("/mnt/usb_trading_data").exists() else Path("D:/trading_data/models")
+MODEL_DIR = Path("/mnt/usb_trading_data/models") if Path(
+    "/mnt/usb_trading_data").exists() else Path("D:/trading_data/models")
 CLOUD_MODEL_DIR = Path("/mnt/google_drive/trading_models")
 
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -32,34 +35,34 @@ MODEL_FILE = MODEL_DIR / "trading_model.h5"
 XGB_MODEL_FILE = MODEL_DIR / "xgb_trading_model.json"
 
 # ===========================
-# 🔹 Modello AI per la previsione della volatilità
+# 🔹 Preprocessing Dati
 # ===========================
-class VolatilityPredictor:
-    """Modello AI per prevedere la volatilità e ottimizzare il rischio in tempo reale."""
+def preprocess_data(data):
+    """Preprocessa i dati per il modello AI."""
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    return scaler.fit_transform(data), scaler
 
-    def __init__(self):
-        self.model = RandomForestRegressor(n_estimators=100, random_state=42)
+def prepare_lstm_data(data, look_back=60):
+    """Prepara i dati per l'input nel modello LSTM."""
+    X, y = [], []
+    for i in range(look_back, len(data)):
+        X.append(data[i-look_back:i, 0])
+        y.append(data[i, 0])
+    return np.array(X).reshape(-1, look_back, 1), np.array(y)
 
-    def train(self, historical_data):
-        """Allena il modello sulla volatilità passata per prevedere quella futura."""
-        features = historical_data[['volume', 'price_change', 'rsi',
-                                    'bollinger_width']]
-        target = historical_data['volatility']
-
-        X_train, X_test, y_train, y_test = train_test_split(features, target,
-                                                            test_size=0.2,
-                                                            random_state=42)
-        self.model.fit(X_train, y_train)
-
-    def predict_volatility(self, current_data):
-        """Prevede la volatilità futura basandosi sui dati attuali."""
-        return self.model.predict(current_data)
+def prepare_xgboost_data(data, look_back=60):
+    """Prepara i dati per l'input nel modello XGBoost."""
+    X, y = [], []
+    for i in range(look_back, len(data)):
+        X.append(data[i-look_back:i, 0])
+        y.append(data[i, 0])
+    return np.array(X), np.array(y)
 
 # ===========================
 # 🔹 Creazione e Addestramento dei Modelli AI
 # ===========================
 def create_lstm_model(input_shape):
-    """Crea e restituisce un modello LSTM compilato."""
+    """Crea un modello LSTM compilato."""
     model = Sequential([
         LSTM(50, return_sequences=True, input_shape=input_shape),
         Dropout(0.2),
@@ -72,7 +75,7 @@ def create_lstm_model(input_shape):
     return model
 
 def train_lstm_model(X_train, y_train, X_val, y_val):
-    """Allena il modello LSTM sui dati di addestramento e validazione."""
+    """Allena il modello LSTM."""
     model = create_lstm_model((X_train.shape[1], 1))
     early_stop = EarlyStopping(monitor='val_loss', patience=5,
                                restore_best_weights=True)
@@ -83,12 +86,12 @@ def train_lstm_model(X_train, y_train, X_val, y_val):
     return model
 
 def create_xgboost_model():
-    """Crea e restituisce un modello XGBoost."""
+    """Crea un modello XGBoost."""
     return xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100,
                             learning_rate=0.1)
 
 def train_xgboost_model(X_train, y_train, X_val, y_val):
-    """Allena il modello XGBoost sui dati di addestramento e validazione."""
+    """Allena il modello XGBoost."""
     model = create_xgboost_model()
     model.fit(X_train, y_train, eval_set=[(X_val, y_val)],
               early_stopping_rounds=10, verbose=True)
@@ -96,8 +99,21 @@ def train_xgboost_model(X_train, y_train, X_val, y_val):
     logging.info(f"✅ Modello XGBoost salvato in {XGB_MODEL_FILE}")
     return model
 
+# ===========================
+# 🔹 Ottimizzazione del Portafoglio
+# ===========================
+def optimize_trading_portfolio(data):
+    """Ottimizza il portafoglio utilizzando la classe PortfolioOptimizer."""
+    optimizer = PortfolioOptimizer(data)
+    optimized_allocation = optimizer.optimize()
+    logging.info(f"📈 Allocazione ottimizzata: {optimized_allocation}")
+    return optimized_allocation
+
+# ===========================
+# 🔹 Funzioni per le Previsioni
+# ===========================
 def load_lstm_model():
-    """Carica e restituisce il modello LSTM salvato."""
+    """Carica il modello LSTM."""
     if MODEL_FILE.exists():
         model = load_model(MODEL_FILE)
         logging.info(f"✅ Modello LSTM caricato da {MODEL_FILE}")
@@ -106,7 +122,7 @@ def load_lstm_model():
     return None
 
 def load_xgboost_model():
-    """Carica e restituisce il modello XGBoost salvato."""
+    """Carica il modello XGBoost."""
     if XGB_MODEL_FILE.exists():
         model = xgb.XGBRegressor()
         model.load_model(XGB_MODEL_FILE)
@@ -137,6 +153,10 @@ def example_prediction():
         xgb_predictions = xgb_model.predict(X_xgb)
         logging.info(f"📊 Previsione XGBoost: {xgb_predictions[-1]}")
 
+    # 🔥 Ottimizza il portafoglio in base ai risultati AI
+    optimized_portfolio = optimize_trading_portfolio(data)
+    logging.info(f"💰 Portafoglio ottimizzato: {optimized_portfolio}")
+
 if __name__ == "__main__":
-    logging.info("🚀 Avvio del modello AI per il trading automatico.")
+    logging.info("🚀 Avvio del modello AI per il trading automatico con ottimizzazione del portafoglio.")
     example_prediction()
