@@ -22,9 +22,9 @@ class RiskManagement:
         self.max_exposure = max_exposure  # Percentuale massima del saldo totale allocata a trade aperti
         self.volatility_predictor = VolatilityPredictor()
 
-    def adaptive_stop_loss(entry_price, pair):
+    def adaptive_stop_loss(self, entry_price, pair):
     """Calcola uno stop-loss e trailing-stop basato su volatilità e trend."""
-    ohlcv = exchange.fetch_ohlcv(pair, timeframe="1h")
+    ohlcv = self.exchange.fetch_ohlcv(pair, timeframe="1h")
     closes = [candle[4] for candle in ohlcv]
     volatility = np.std(closes) / np.mean(closes)
 
