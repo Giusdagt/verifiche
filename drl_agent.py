@@ -1,22 +1,27 @@
-# drl_agent
+# drl_agent.py - Agente di Trading con Reinforcement Learning Ottimizzato
 import ccxt
 import os
 import time
 import logging
-import shutil
 import requests
 import optuna
-import torch
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import shutil
 from pathlib import Path
 from datetime import datetime
 from stable_baselines3 import PPO, DQN, A2C, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.buffers import ReplayBuffer
+from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from trading_environment import TradingEnv
 from data_handler import load_normalized_data
 from data_api_module import main_fetch_all_data as load_raw_data
+from risk_management import RiskManagement
+from portfolio_optimization import PortfolioOptimization
 import indicators
 
 # 📌 Configurazione avanzata per Oracle Free e backup automatico
@@ -36,9 +41,21 @@ CLOUD_BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 CLOUD_BACKUP_URL = "https://your-cloud-backup-service.com/upload"
 
 # ===========================
+# 🔹 Rete Neurale Personalizzata con PyTorch
+# ===========================
+class CustomFeatureExtractor(BaseFeaturesExtractor):
+    def __init__(self, observation_space, features_dim=128):
+        super(CustomFeatureExtractor, self).__init__(observation_space, features_dim)
+        self.fc1 = nn.Linear(observation_space.shape[0], 256)
+        self.fc2 = nn.Linear(256, features_dim)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        return self.fc2(x)
+
+# ===========================
 # 🔹 FUNZIONI DI BACKUP AUTOMATICO
 # ===========================
-
 def backup_model_to_cloud(model_path):
     """Backup automatico del modello su cloud."""
     try:
@@ -58,13 +75,18 @@ def save_model(model, model_name):
     logging.info(f"✅ Modello salvato in {model_path}.")
     backup_model_to_cloud(model_path)
 
+# ===========================
+# 🔹 CLASSE DRLAgent CON GESTIONE AVANZATA
+# ===========================
 class DRLAgent:
-    def __init__(self, trading_mode="auto"):
+    def __init__(self, trading_mode="auto", algorithm="PPO"):
         """Inizializza l'agente di trading."""
-        self.trading_mode = trading_mode  # "auto", "live", "backtest"
+        self.trading_mode = trading_mode
+        self.algorithm = algorithm
         self.exchange = None
+        self.replay_buffer = ReplayBuffer(buffer_size=1000000)
+        self.risk_manager = RiskManagement()  # ✅ Integrazione della gestione del rischio
 
-        # Seleziona automaticamente la modalità migliore
         if self.trading_mode == "auto":
             self.trading_mode = self.detect_best_mode()
 
@@ -78,64 +100,48 @@ class DRLAgent:
 
     def detect_best_mode(self):
         """Decide se fare trading live o backtesting automaticamente."""
-        market_data = data_handler.load_normalized_data()
-        if market_data.empty:
-            return "backtest"  # Se non ci sono dati recenti → Backtesting
-        else:
-            return "live"  # Se ci sono opportunità → Trading reale
+        market_data = load_normalized_data()
+        return "live" if not market_data.empty else "backtest"
 
     def execute_trade(self, pair, amount):
-        """Esegue un'operazione di trading o simula un trade per il backtest."""
+        """Esegue un'operazione di trading con gestione del rischio."""
+        amount = self.risk_manager.apply_risk_management(pair, amount)  # 📌 🔥 Applica la gestione del rischio
+
         if self.trading_mode == "live":
-            order = self.exchange.create_market_order(pair, 'buy', amount)
-            return order
+            try:
+                order = self.exchange.create_market_order(pair, 'buy', amount)
+                logging.info(f"✅ Ordine eseguito con successo: {order}")
+                return order
+            except Exception as e:
+                logging.error(f"❌ Errore nell'esecuzione dell'ordine: {e}")
+                return None
         else:
-            print(f"Simulazione trade: BUY {amount} di {pair}")
-# ===========================
-# 🔹 OTTIMIZZAZIONE AUTOMATICA IPERPARAMETRI
-# ===========================
-
-def optimize_agent(trial):
-    """Ottimizzazione automatica degli iperparametri con Optuna."""
-    env = DummyVecEnv([lambda: TradingEnv()])
-    learning_rate = trial.suggest_loguniform("learning_rate", 1e-5, 1e-3)
-    gamma = trial.suggest_uniform("gamma", 0.8, 0.999)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
-
-    model = PPO(
-        'MlpPolicy',
-        env,
-        learning_rate=learning_rate,
-        gamma=gamma,
-        batch_size=batch_size,
-        verbose=0
-    )
-
-    model.learn(total_timesteps=10_000)
-    rewards = np.random.uniform(0, 1)  # Simulazione della performance
-    return rewards
-
-def hyperparameter_tuning():
-    """Esegue l'ottimizzazione degli iperparametri."""
-    study = optuna.create_study(direction="maximize")
-    study.optimize(optimize_agent, n_trials=20)
-    best_params = study.best_params
-    logging.info(f"✅ Migliori iperparametri trovati: {best_params}")
-    return best_params
+            logging.info(f"🔍 Simulazione trade: BUY {amount} di {pair}")
 
 # ===========================
-# 🔹 ADDESTRAMENTO AUTOMATICO
+# 🔹 TRAINING E TEST DELL'AGENTE
 # ===========================
-
-def train_agent(model_name="best_model.zip", total_timesteps=100_000):
-    """Allena l'agente RL e salva il modello."""
+def train_agent(model_name="best_model.zip", total_timesteps=100_000, algorithm="PPO"):
+    """Allena l'agente RL e usa il miglior portafoglio ottimizzato per il trading."""
     env = DummyVecEnv([lambda: TradingEnv()])
     best_params = hyperparameter_tuning()
 
-    model = PPO("MlpPolicy", env, verbose=1,
-                learning_rate=best_params["learning_rate"],
-                gamma=best_params["gamma"],
-                batch_size=best_params["batch_size"])
+    # 📌 🔥 Ottimizziamo il portafoglio prima di allenare il modello
+    portfolio_manager = PortfolioOptimization()
+    optimized_pairs = portfolio_manager.optimize_portfolio()
+
+    logging.info(f"📊 Coppie di trading ottimizzate selezionate: {optimized_pairs}")
+
+    if algorithm == "PPO":
+        model = PPO("MlpPolicy", env, verbose=1)
+    elif algorithm == "DQN":
+        model = DQN("MlpPolicy", env, verbose=1)
+    elif algorithm == "A2C":
+        model = A2C("MlpPolicy", env, verbose=1)
+    elif algorithm == "SAC":
+        model = SAC("MlpPolicy", env, verbose=1)
+    else:
+        raise ValueError("Algoritmo RL non supportato.")
 
     checkpoint_callback = CheckpointCallback(save_freq=10_000, save_path=str(MODEL_DIR), name_prefix="trading_model")
     model.learn(total_timesteps=total_timesteps, callback=checkpoint_callback)
@@ -143,51 +149,8 @@ def train_agent(model_name="best_model.zip", total_timesteps=100_000):
     save_model(model, model_name)
 
 # ===========================
-# 🔹 TEST DEL MODELLO
-# ===========================
-
-def test_agent(model_name="best_model.zip"):
-    """Testa il modello e seleziona la migliore strategia."""
-    model_path = MODEL_DIR / model_name
-    if not model_path.exists():
-        logging.error("❌ Nessun modello disponibile per il test.")
-        return
-
-    env = DummyVecEnv([lambda: TradingEnv()])
-    model = PPO.load(model_path, env=env)
-
-    obs = env.reset()
-    for _ in range(1000):
-        action, _ = model.predict(obs)
-        obs, rewards, done, _ = env.step(action)
-        if done:
-            obs = env.reset()
-
-    logging.info("✅ Test del modello completato.")
-
-# ===========================
-# 🔹 STRATEGIE DI SCALPING AUTOMATICHE
-# ===========================
-
-def evaluate_scalping_strategies():
-    """Seleziona la migliore strategia di scalping."""
-    strategies = ["BB+RSI", "Ichimoku+ADX", "Order Flow+Sentiment"]
-    best_strategy = None
-    best_performance = -np.inf
-
-    for strategy in strategies:
-        logging.info(f"🔍 Testando strategia: {strategy}...")
-        avg_reward = np.random.uniform(0, 1)  # Simulazione della performance
-        if avg_reward > best_performance:
-            best_performance = avg_reward
-            best_strategy = strategy
-
-    logging.info(f"🏆 Migliore strategia selezionata: {best_strategy}")
-
-# ===========================
 # 🔹 AVVIO AUTOMATICO SU ORACLE FREE 24/7
 # ===========================
-
 if __name__ == "__main__":
     logging.info("🚀 Avvio dell'agente DRL su Oracle Free 24/7...")
 
