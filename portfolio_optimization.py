@@ -83,3 +83,14 @@ def optimize_for_conditions(market_data, balance, market_condition, risk_toleran
     """Seleziona automaticamente l'ottimizzazione migliore in base alle condizioni di mercato e al saldo disponibile."""
     optimizer = PortfolioOptimizer(market_data, balance, risk_tolerance, scalping=(market_condition == "scalping"))
     return optimizer.optimize_with_constraints()
+
+def dynamic_allocation(trading_pairs, capital):
+    """Distribuisce il capitale basandosi su volatilità, trend e liquidità."""
+    total_score = sum([pair[2] * abs(pair[3] - pair[4]) for pair in trading_pairs])  # Ponderazione
+    allocations = {}
+
+    for pair in trading_pairs:
+        weight = (pair[2] * abs(pair[3] - pair[4])) / total_score  # Combina volatilità e trend
+        allocations[pair[0]] = capital * weight  # Distribuzione intelligente del capitale
+
+    return allocations
