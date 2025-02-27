@@ -1,9 +1,8 @@
 # ai_model.py - Modello AI per il trading automatico
 import os
-import time
+import pandas as pd
 import logging
 import numpy as np
-import pandas as pd
 import xgboost as xgb
 from datetime import datetime
 from pathlib import Path
@@ -20,8 +19,10 @@ from gym_trading_env import TradingEnv
 from risk_management import RiskManagement
 
 # 📌 Configurazione logging per monitorare AI in tempo reale
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # 📌 Percorsi per il salvataggio dei modelli su USB e Cloud
 MODEL_DIR = Path("/mnt/usb_trading_data/models") if Path(
@@ -45,8 +46,7 @@ class VolatilityPredictor:
 
     def train(self, historical_data):
         """Allena il modello sulla volatilità passata per prevedere quella futura."""
-        features = historical_data[[
-            'volume', 'price_change', 'rsi', 'bollinger_width']]
+        features = historical_data[['volume', 'price_change', 'rsi', 'bollinger_width']]
         target = historical_data['volatility']
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -76,8 +76,8 @@ def create_lstm_model(input_shape):
 def train_lstm_model(X_train, y_train, X_val, y_val):
     """Allena il modello LSTM sui dati di addestramento e validazione."""
     model = create_lstm_model((X_train.shape[1], 1))
-    early_stop = EarlyStopping(monitor='val_loss', patience=5,
-                               restore_best_weights=True)
+    early_stop = EarlyStopping(
+        monitor='val_loss', patience=5, restore_best_weights=True)
     model.fit(X_train, y_train, batch_size=32, epochs=50,
               validation_data=(X_val, y_val), callbacks=[early_stop])
     model.save(MODEL_FILE)
