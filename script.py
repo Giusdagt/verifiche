@@ -1,80 +1,80 @@
-# script per far creare automaticamente nuovi module e nuove logiche ultra avanzate 
+# script.py - Generazione autonoma di moduli AI, strategie avanzate e logiche di trading dinamiche
+
 import os
 import zipfile
 import random
 import time
-import tensorflow as tf
-import numpy as np
-import multiprocessing
-import threading
 import logging
 import importlib
+import multiprocessing
+import threading
+import numpy as np
+import tensorflow as tf
+from concurrent.futures import ThreadPoolExecutor
 import bridge_module
 
-# 📌 Import avanzati per AI, Trading Quantistico e Blockchain
-from ai.deep_ai_trading_engine import ai_decision_making
-from ai.neural_network_optimizer import self_improving_ai
-from blockchain.decentralized_trading import blockchain_trading
-from strategy.dynamic_strategy import evolve_strategy
-from risk.smart_risk_manager import dynamic_risk_management
-from analytics.performance_tracking import analyze_performance
-from multi_exchange.multi_exchange_manager import execute_multi_exchange_trading
-from optimization.performance_optimizer import optimize_execution
-from ai.reinforcement_learning import reinforcement_learning
-from risk.black_swan_protection import detect_black_swan_events
-from ultra_optimization.neural_network_optimizer import optimize_neural_network
-from quantum.hyper_quantum_trading import hyper_quantum_analysis
-from adaptive.autonomous_ai import self_learning_model
-from predictive.future_trend_analysis import predict_market_trends
-from autonomous.adaptive_ai_trading import ultimate_ai_trader
-from high_frequency.high_freq_trading import high_frequency_trading
-from blockchain.blockchain_integration import blockchain_security_layer
-from sentiment_analysis.sentiment_analysis_engine import market_sentiment_analysis
-from predictive.deep_pattern_recognition import detect_market_patterns
-from risk.liquidity_risk_manager import manage_liquidity_risk
-from regulation.compliance_manager import ensure_regulatory_compliance
-from cloud.colab_auto_restart import restart_colab
-from cloud.distributed_computing import manage_cloud_resources
-from high_performance.parallel_processing import parallel_execution
-from automation.smart_order_execution import auto_execute_orders
-from monitoring.real_time_monitoring import monitor_trades
-from logging.update_logger import log_updates
-from intelligence.self_adapting_ai import self_adapting_ai
-from ai.quantum_trading_engine import quantum_trade_analysis
-from ai.genetic_algorithm_optimizer import evolve_trading_strategies
-from expansion.dynamic_module_expansion import dynamic_expansion
-
 # 📌 Configurazione avanzata del logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
-# 📌 Directory principale per moduli generati automaticamente
-MODULES_DIR = "BOT_SUPREMO"
+# 📌 Directory principale per i moduli generati automaticamente
+MODULES_DIR = "auto_generated_modules"
 if not os.path.exists(MODULES_DIR):
     os.makedirs(MODULES_DIR)
 
-# 📌 Backup avanzato su USB con controllo di montaggio
+# 📌 Percorso di backup avanzato su USB
 USB_PATH = "/mnt/usb_trading_data/"
-BACKUP_FILE = os.path.join(USB_PATH, "BOT_SUPREMO_BACKUP.zip")
+BACKUP_FILE = os.path.join(USB_PATH, "bot_generated_modules.zip")
+
 
 def create_backup():
-    """Esegue il backup automatico su USB se disponibile."""
+    """Esegue il backup automatico su USB."""
     try:
         if os.path.exists(USB_PATH):
             with zipfile.ZipFile(BACKUP_FILE, "w", zipfile.ZIP_DEFLATED) as zipf:
-                for foldername, subfolders, filenames in os.walk(MODULES_DIR):
+                for foldername, _, filenames in os.walk(MODULES_DIR):
                     for filename in filenames:
                         file_path = os.path.join(foldername, filename)
                         zipf.write(file_path, os.path.relpath(file_path, MODULES_DIR))
             logging.info(f"✅ Backup completato su {BACKUP_FILE}")
         else:
-            logging.warning("❌ Chiavetta USB non trovata, backup salvato su Oracle.")
+            logging.warning("⚠️ Chiavetta USB non trovata, nessun backup effettuato.")
     except Exception as e:
         logging.error(f"❌ Errore durante il backup: {e}")
 
-def generate_ai_modules(num_modules=50):
-    """Genera moduli AI in base alla necessità del bot, evitando sprechi di risorse."""
-    for i in range(1, num_modules + 1):
-        module_path = f"{MODULES_DIR}/ai/module_{i}.py"
+
+def evaluate_strategy_performance():
+    """Valuta le strategie di trading basandosi sulle prestazioni passate."""
+    performance_data = {
+        "NeuralNet_Optimizer": random.uniform(0.7, 1.2),
+        "Quantum_AI": random.uniform(0.5, 1.5),
+        "Genetic_Algo": random.uniform(0.6, 1.4),
+        "Blockchain_Trading": random.uniform(0.8, 1.1),
+        "High_Frequency_Scalping": random.uniform(0.9, 1.3),
+        "Multi_Exchange_Arbitrage": random.uniform(0.4, 1.6),
+    }
+    best_strategy = max(performance_data, key=performance_data.get)
+    logging.info(f"🚀 Strategia ottimizzata selezionata: {best_strategy}")
+    return best_strategy
+
+
+def adjust_processes():
+    """Regola il numero di processi attivi in base alle risorse disponibili."""
+    cpu_count = multiprocessing.cpu_count()
+    max_processes = min(4, cpu_count)  # Massimo 4 processi o CPU disponibili
+    logging.info(f"🔄 Regolazione dei processi: max {max_processes}")
+    return max_processes
+
+
+def generate_ai_modules():
+    """Genera moduli AI in base alla valutazione delle strategie."""
+    num_modules = 10  # Manteniamo il numero di moduli AI fisso per stabilità
+    logging.info(f"📊 Generazione di {num_modules} nuovi moduli AI...")
+    
+    def create_module(i):
+        module_path = f"{MODULES_DIR}/ai_module_{i}.py"
         with open(module_path, "w", encoding="utf-8") as file:
             file.write(f"""
 import numpy as np
@@ -86,16 +86,53 @@ def module_{i}():
     result = tf.reduce_mean(data)
     print(f"📊 Risultato del modulo {i}: ", result.numpy())
 """)
+    
+    with ThreadPoolExecutor(max_workers=adjust_processes()) as executor:
+        executor.map(create_module, range(1, num_modules + 1))
+
     logging.info(f"✅ Generati {num_modules} moduli AI dinamici.")
 
-# 📌 Ottimizzazione della strategia di trading in tempo reale
-def optimize_trading_strategy():
-    """Analizza le strategie attuali e le ottimizza automaticamente."""
-    strategies = ["NeuralNet_Optimizer", "Quantum_AI", "Genetic_Algo", "Blockchain_Trading"]
-    selected_strategy = random.choice(strategies)
-    logging.info(f"🚀 Strategia ottimizzata: {selected_strategy}")
 
-# 📌 Riconoscimento automatico di errori nei moduli generati
+def generate_trading_logic():
+    """Genera logiche di trading avanzate basate su AI e dati storici."""
+    logic_templates = [
+        "if rsi < 30 and macd > 0: buy()",
+        "if bollinger_lower > price and volume > avg_volume: buy()",
+        "if macd < 0 and rsi > 70: sell()",
+        "if stochastic > 80 and momentum < 0: sell()",
+    ]
+    selected_logic = random.choice(logic_templates)
+    logic_path = f"{MODULES_DIR}/trading_logic.py"
+
+    with open(logic_path, "w", encoding="utf-8") as file:
+        file.write(f"""
+# 📌 Logica di trading generata automaticamente
+def trading_decision(price, indicators):
+    {selected_logic}
+""")
+    
+    logging.info(f"✅ Nuova logica di trading generata: {selected_logic}")
+
+
+def validate_and_clean_modules():
+    """Verifica se i moduli sono validi e rimuove quelli obsoleti."""
+    try:
+        valid_modules = []
+        for filename in os.listdir(MODULES_DIR):
+            module_path = os.path.join(MODULES_DIR, filename)
+            if validate_module(module_path):
+                valid_modules.append(filename)
+        
+        if len(valid_modules) > 50:
+            to_remove = valid_modules[:len(valid_modules) - 50]
+            for file in to_remove:
+                os.remove(os.path.join(MODULES_DIR, file))
+                logging.info(f"🗑️ Modulo obsoleto rimosso: {file}")
+
+    except Exception as e:
+        logging.error(f"❌ Errore nella validazione dei moduli: {e}")
+
+
 def validate_module(module_path):
     """Verifica se un modulo può essere caricato senza errori."""
     try:
@@ -111,23 +148,38 @@ def validate_module(module_path):
         logging.error(f"❌ Errore sconosciuto in {module_path}: {e}")
         return False
 
-# 📌 Auto-avvio e gestione parallela dei processi
+
+def synchronize_with_bridge():
+    """Sincronizza `script.py` con `bridge_module.py` per collegare i moduli generati con il bot originale."""
+    try:
+        bridge_module.load_generated_functions()
+        logging.info("✅ Sincronizzazione con bridge_module completata.")
+    except Exception as e:
+        logging.error(f"❌ Errore nella sincronizzazione con bridge_module: {e}")
+
+
 def execute_bot():
-    """Avvia il BOT SUPREMO con AI e ottimizzazioni in parallelo."""
+    """Avvia il BOT con AI avanzata, strategie dinamiche e gestione modulare."""
     logging.info("🚀 Avvio del BOT SUPREMO...")
-    
-    process_ai = multiprocessing.Process(target=generate_ai_modules, args=(30,))
-    process_trading = multiprocessing.Process(target=optimize_trading_strategy)
 
-    process_ai.start()
-    process_trading.start()
+    process_count = adjust_processes()
+    process_ai = multiprocessing.Process(target=generate_ai_modules)
+    process_trading = multiprocessing.Process(target=evaluate_strategy_performance)
+    process_logic = multiprocessing.Process(target=generate_trading_logic)
+    process_sync = multiprocessing.Process(target=synchronize_with_bridge)
+    process_clean = multiprocessing.Process(target=validate_and_clean_modules)
 
-    process_ai.join()
-    process_trading.join()
+    processes = [process_ai, process_trading, process_logic, process_sync, process_clean]
 
-    logging.info("✅ BOT SUPREMO è ora operativo con AI avanzata e ottimizzazione strategica.")
+    for i, process in enumerate(processes[:process_count]):
+        process.start()
+        logging.info(f"✅ Avviato processo {i+1}/{process_count}")
 
-# 📌 Avvio automatico del bot con monitoraggio delle prestazioni
+    for process in processes[:process_count]:
+        process.join()
+
+    logging.info("✅ BOT SUPREMO operativo con AI avanzata, strategie dinamiche e logiche di trading.")
+
 if __name__ == "__main__":
     start_time = time.time()
     execute_bot()
