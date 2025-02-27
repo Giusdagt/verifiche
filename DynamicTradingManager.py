@@ -8,6 +8,9 @@ import time
 import requests
 import shutil
 from data_api_module import fetch_data_from_exchanges
+import indicators
+import portfolio_optimization
+import risk_management
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
