@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import talib
-import data_handler  # Per gestire i dati di mercato
+import data_handler  # Per gestire i dati di mercato (normalizzati)
 from datetime import datetime, timedelta
 from ai_model import VolatilityPredictor
 
@@ -21,7 +21,18 @@ class RiskManagement:
         self.risk_per_trade = risk_per_trade  # Percentuale del saldo investita per trade
         self.max_exposure = max_exposure  # Percentuale massima del saldo totale allocata a trade aperti
         self.volatility_predictor = VolatilityPredictor()
-    
+
+    def adaptive_stop_loss(entry_price, pair):
+    """Calcola uno stop-loss e trailing-stop basato su volatilità e trend."""
+    ohlcv = exchange.fetch_ohlcv(pair, timeframe="1h")
+    closes = [candle[4] for candle in ohlcv]
+    volatility = np.std(closes) / np.mean(closes)
+
+    stop_loss = entry_price * (1 - (volatility * 1.5))  # Stop-loss adattivo
+    trailing_stop = entry_price * (1 - (volatility * 0.8))  # Trailing-stop meno aggressivo
+
+    return stop_loss, trailing_stop
+
     def adjust_risk(self, market_data):
         """Adatta dinamicamente il trailing stop e il capitale in base alla volatilità del mercato."""
         future_volatility = self.volatility_predictor.predict_volatility(np.array([[market_data['volume'], market_data['price_change'], market_data['rsi'], market_data['bollinger_width']]]))
