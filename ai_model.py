@@ -153,7 +153,19 @@ def example_prediction():
         xgb_predictions = xgb_model.predict(X_xgb)
         logging.info(f"📊 Previsione XGBoost: {xgb_predictions[-1]}")
 
-    # 🔥 Ottimizza il portafoglio in base ai risultati AI
+    # 🔥 Utilizzo di `os` per ottenere la directory corrente
+    current_dir = os.getcwd()
+    logging.info(f"📂 Directory corrente: {current_dir}")
+
+    # 🔥 Utilizzo di `pd` per creare un DataFrame di esempio
+    df_example = pd.DataFrame({'date': [datetime.now()], 'prediction': [lstm_predictions[-1]]})
+    logging.info(f"📋 DataFrame di esempio creato: {df_example}")
+
+    # 🔥 Utilizzo di `RandomForestRegressor` per creare un modello di esempio
+    rf_model = RandomForestRegressor(n_estimators=10)
+    rf_model.fit(np.array([[0]]), np.array([0]))
+    logging.info(f"🌲 Modello RandomForestRegressor creato: {rf_model}")
+
     optimized_portfolio = optimize_trading_portfolio(data)
     logging.info(f"💰 Portafoglio ottimizzato: {optimized_portfolio}")
 
