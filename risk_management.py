@@ -1,5 +1,6 @@
 # risk_management
 import logging
+import ccxt
 import numpy as np
 import talib
 import data_handler  # Per gestire i dati di mercato (normalizzati)
