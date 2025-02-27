@@ -1,4 +1,5 @@
 # drl_agent
+import ccxt
 import os
 import time
 import logging
