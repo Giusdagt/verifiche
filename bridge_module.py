@@ -1,8 +1,9 @@
-# bridge_module.py - Modulo ponte tra il bot originale e le funzioni generate dinamicamente
+# bridge_module.py - Connessione tra script.py e il bot originale
+
 import os
 import importlib
 import logging
-import importlib.util
+import time
 import sys
 import inspect
 
@@ -16,36 +17,18 @@ logging.basicConfig(
 GENERATED_MODULE_PATH = "generated_functions.py"
 MODULES_DIR = "auto_generated_modules"
 
-def load_module(module_name, class_name):
-    """Carica dinamicamente una classe da un modulo."""
-    try:
-        module = importlib.import_module(module_name)
-        return getattr(module, class_name)
-    except (ImportError, AttributeError) as e:
-        logging.error(f"❌ Errore nel caricamento del modulo {module_name}: {e}")
-        return None
 
 def find_missing_functions():
     """
     Analizza i moduli esistenti e individua le funzioni mancanti.
     """
-    expected_modules = [
-        "portfolio_optimization",
-        "risk_management",
-        "trading_env",
-        "drl_agent",
-        "ai_model",
-        "socket_io",
-        "DynamicTradingManager",
-        "data_api_module",
-        "data_handler",
-        "data_loader",
-        "gym_trading_env",
-        "indicators",
-        "main",
-        "trading_bot",
-        "trading_environment"
-    ]
+    expected_modules = expected_modules = [
+    "portfolio_optimization", "risk_management", "trading_env",
+    "drl_agent", "ai_model", "socket_io", "data_loader",
+    "data_api_module", "trading_environment", "gym_trading_env",
+    "indicators", "DynamicTradingManager", "data_handler",
+    "main", "trading_bot"
+]
     missing_functions = set()
 
     for module_name in expected_modules:
@@ -54,13 +37,18 @@ def find_missing_functions():
             if spec:
                 module = importlib.import_module(module_name)
                 functions = {
-                    name for name, obj in inspect.getmembers(module, inspect.isfunction)
+                    name for name, obj in inspect.getmembers(module,
+                                                             inspect.isfunction)
                 }
                 missing_functions.update(functions)
         except ImportError:
-            logging.warning(f"⚠️ Modulo {module_name} non trovato. Le funzioni mancanti verranno gestite automaticamente.")
+            logging.warning(
+                f"⚠️ Modulo {module_name} non trovato. "
+                "Le funzioni mancanti verranno gestite automaticamente."
+            )
 
     return missing_functions
+
 
 def add_mock_functions():
     """
@@ -79,9 +67,14 @@ def add_mock_functions():
         for function_name in missing_functions:
             if f"def {function_name}(" not in content:
                 f.write(f"\n\ndef {function_name}(*args, **kwargs):\n")
-                f.write(f"    logging.warning('⚠️ Funzione {function_name} non implementata!')\n")
+                f.write(
+                    f"    logging.warning('⚠️ Funzione {function_name} "
+                    "non implementata!')\n"
+                )
                 f.write("    return None\n")
-                logging.info(f"✅ Funzione {function_name} aggiunta in {GENERATED_MODULE_PATH}")
+                logging.info(f"✅ Funzione {function_name} "
+                             f"aggiunta in {GENERATED_MODULE_PATH}")
+
 
 def load_generated_functions():
     """
@@ -89,7 +82,8 @@ def load_generated_functions():
     """
     if os.path.exists(GENERATED_MODULE_PATH):
         spec = importlib.util.spec_from_file_location(
-            "generated_functions", GENERATED_MODULE_PATH)
+            "generated_functions", GENERATED_MODULE_PATH
+        )
         generated_functions = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(generated_functions)
 
@@ -102,37 +96,46 @@ def load_generated_functions():
                 module = sys.modules[module_name]
                 if not hasattr(module, function_name):
                     setattr(module, function_name, func)
-                    logging.info(f"🔗 Funzione {function_name} collegata dinamicamente al modulo {module_name}")
+                    logging.info(
+                        f"🔗 Funzione {function_name} collegata dinamicamente "
+                        f"al modulo {module_name}"
+                    )
+
 
 def load_custom_modules():
     """Carica automaticamente tutti i moduli generati dinamicamente."""
     if not os.path.exists(MODULES_DIR):
-        logging.info(f"📂 Creazione della cartella {MODULES_DIR} per i moduli dinamici.")
+        logging.info(
+            f"📂 Creazione della cartella {MODULES_DIR} per i moduli dinamici."
+        )
         os.makedirs(MODULES_DIR)
 
-    module_files = [f for f in os.listdir(MODULES_DIR) if f.endswith(".py")]
+    module_files = [
+        f for f in os.listdir(MODULES_DIR) if f.endswith(".py")
+    ]
     for module_file in module_files:
         module_name = module_file.replace(".py", "")
         try:
-            imported_module = importlib.import_module(f"{MODULES_DIR}.{module_name}")
+            imported_module = importlib.import_module(
+                f"{MODULES_DIR}.{module_name}"
+            )
             importlib.reload(imported_module)
             logging.info(f"✅ Modulo {module_name} caricato con successo.")
         except Exception as e:
-            logging.error(f"❌ Errore nel caricamento del modulo {module_name}: {e}")
+            logging.error(f"❌ Errore nel caricamento del modulo {module_name}: "
+                          f"{e}")
+
 
 def synchronize_with_script():
     """
-    Sincronizza `bridge_module.py` con `script.py` per la generazione automatica di moduli avanzati.
+    Sincronizza `bridge_module.py` con `script.py` per la generazione
+    automatica di moduli avanzati.
     """
-    try:
-        import script
-        script.generate_ai_modules()
-        script.optimize_trading_strategy()
-        logging.info("✅ Sincronizzazione con script.py completata con successo.")
-    except ImportError as e:
-        logging.error(f"❌ Errore nell'importazione di script.py: {e}")
-    except AttributeError as e:
-        logging.error(f"❌ Funzioni mancanti in script.py: {e}")
+    import script
+    script.generate_ai_modules()
+    script.generate_trading_logic()
+    script.evaluate_strategy_performance()
+
 
 if __name__ == "__main__":
     add_mock_functions()
