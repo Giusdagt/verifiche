@@ -17,7 +17,7 @@ from data_handler import load_data
 from drl_agent import DRLAgent
 from gym_trading_env import TradingEnv
 from risk_management import RiskManagement
-from portfolio_optimization import PortfolioOptimizer # 🔥 NUOVA INTEGRAZIONE
+from portfolio_optimization import PortfolioOptimizer
 
 # 📌 Configurazione logging avanzata
 logging.basicConfig(level=logging.INFO,
@@ -158,7 +158,8 @@ def example_prediction():
     logging.info(f"📂 Directory corrente: {current_dir}")
 
     # 🔥 Utilizzo di `pd` per creare un DataFrame di esempio
-    df_example = pd.DataFrame({'date': [datetime.now()], 'prediction': [lstm_predictions[-1]]})
+    df_example = pd.DataFrame({'date': [datetime.now()], 
+                               'prediction': [lstm_predictions[-1]]})
     logging.info(f"📋 DataFrame di esempio creato: {df_example}")
 
     # 🔥 Utilizzo di `RandomForestRegressor` per creare un modello di esempio
